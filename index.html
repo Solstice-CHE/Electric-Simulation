@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <link rel="stylesheet" href="styles.css">
+        <title>Watt-a-World: A Virtual Simulator towards Circuitry</title>
+    </head>
+    <body>
+        <div class="interface">
+            <video autoplay loop muted plays-incline class="background-clip">
+                <source src="video.mp4"
+                type="video/mp4"
+            </video>
+        </div>
+        <div id="main-interface">
+            <h1>Watt-a-World: A Virtual Simulator towards Circuitry</h1>
+            <div class="start-button">
+                <a href="circuitarea.html">
+                   <button id="start-button">Start Simulation</button>   
+                </a>
+            </div>
+            <div class="calculator">   
+                <a href="calculator.html">
+                    <button id="calculator">Calculator</button>
+                </a>
+            </div>
+            <div class="info">   
+                <a href="1.html">
+                    <button id="info">Info</button> 
+                </a>
+            </div>   
+            <button id="exit"; onclick="self.close()">Exit</button>
+        </div>
+    </body>
+</html>

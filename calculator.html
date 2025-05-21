@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Circuit Simulator: Ohm’s Law & Kirchhoff's Rule</title>
+  <style>
+/* Background video styling */
+.background-clip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(0.35) saturate(1.2);
+  transition: filter 0.5s ease;
+}
+
+/* Calculator container */
+.calculator {
+  max-width: 650px;
+  background: linear-gradient(145deg, #f0f4ff, #d9e2ff);
+  margin: 50px auto;
+  padding: 30px 40px;
+  border-radius: 20px;
+  
+  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #2a2a3d;
+  user-select: none;
+  transition: box-shadow 0.3s ease;
+}
+
+/* Headings */
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+  font-weight: 900;
+  font-size: 2.8rem;
+  color: #274060;
+  text-shadow: 1px 1px 3px rgba(100, 115, 140, 0.3);
+}
+
+h2 {
+  margin-top: 35px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: #415a77;
+  border-bottom: 3px solid #80aaff;
+  padding-bottom: 8px;
+  letter-spacing: 0.05em;
+  font-size: 1.4rem;
+}
+
+/* Form rows */
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+  gap: 15px;
+}
+
+.form-row label {
+  flex: 1 0 150px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2e3a59;
+}
+
+.form-row input,
+.form-row select {
+  flex: 2 1 auto;
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: 2px solid #cbd5e1;
+  border-radius: 12px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  outline-offset: 2px;
+}
+
+.form-row input::placeholder {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 8px rgba(74, 144, 226, 0.5);
+  outline: none;
+}
+
+/* Buttons */
+.btn-row {
+  justify-content: center;
+}
+
+button {
+  background: linear-gradient(135deg, #4a90e2, #60a5fa);
+  color: white;
+  border: none;
+  padding: 14px 38px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(74, 144, 226, 0.4);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+  width: 100%;
+  max-width: 300px;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #3b79d9, #4d8fe5);
+  box-shadow: 0 10px 25px rgba(59, 121, 217, 0.6);
+}
+
+/* Output text */
+.output {
+  margin-top: 15px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #1a202c;
+  background: #e8eefc;
+  padding: 12px 18px;
+  border-radius: 14px;
+  box-shadow: inset 0 0 8px rgba(128, 168, 255, 0.3);
+  min-height: 44px;
+}
+
+/* Separator */
+hr {
+  border: none;
+  border-top: 1.5px solid #cbd5e1;
+  margin: 40px 0;
+}
+
+/* Back Button */
+.nav-button {
+  display: inline-block;
+  margin-top: 40px;
+  padding: 12px 28px;
+  background: #60a5fa;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 16px;
+  text-decoration: none;
+  box-shadow: 0 6px 15px rgba(96, 165, 250, 0.5);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+  text-align: center;
+}
+
+.nav-button:hover {
+  background: #3b82f6;
+  box-shadow: 0 8px 22px rgba(59, 130, 246, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .calculator {
+    margin: 30px 15px;
+    padding: 25px 30px;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+}
+  </style>
+</head>
+<body>
+  <video autoplay loop muted playsinline class="background-clip">
+    <source src="video.mp4" type="video/mp4" />
+  </video>
+
+  <main class="calculator">
+    <h1>Ohm’s Law & Circuit Calculator</h1>
+
+    <!-- Ohm's Law Section -->
+    <section>
+      <h2>Voltage, Current, Power</h2>
+      <div class="form-row">
+        <label for="voltage">Voltage (V):</label>
+        <input type="number" id="voltage" placeholder="Volts" />
+      </div>
+      <div class="form-row">
+        <label for="current">Current (I):</label>
+        <input type="number" id="current" placeholder="Amps (A)" />
+      </div>
+      <div class="form-row">
+        <label for="resistance">Resistance (R):</label>
+        <input type="number" id="resistance" placeholder="Ohms (Ω)" />
+      </div>
+      <div class="form-row btn-row">
+        <button onclick="calculateOhmsLaw()">Calculate Missing Value</button>
+      </div>
+    </section>
+
+    <!-- Power Section -->
+    <section>
+      <h2>Power Calculation</h2>
+      <div class="form-row btn-row">
+        <button onclick="calculatePower()">Calculate Power</button>
+      </div>
+      <p class="output" id="powerOutput">Power (P): -- W</p>
+    </section>
+
+    <hr />
+
+    <!-- Total Resistance Section -->
+    <section>
+      <h2>Total Resistance</h2>
+      <div class="form-row">
+        <label for="resistorType">Type:</label>
+        <select id="resistorType">
+          <option value="series">Series</option>
+          <option value="parallel">Parallel</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="resistances">Resistances (comma-separated):</label>
+        <input type="text" id="resistances" placeholder="e.g. 10, 20, 30" />
+      </div>
+      <div class="form-row btn-row">
+        <button onclick="calculateTotalResistance()">Calculate Total Resistance</button>
+      </div>
+      <p class="output" id="totalResistanceOutput">Total Resistance: -- Ω</p>
+    </section>
+
+    <hr />
+
+    <!-- Kirchhoff's Rule Section -->
+    <section>
+      <h2>Kirchhoff’s Rule: Series Circuit Solver</h2>
+      <div class="form-row">
+        <label for="kvBattery">Battery Voltage (V):</label>
+        <input type="number" id="kvBattery" value="12" />
+      </div>
+
+      <div class="form-row">
+        <label for="resistorCount">Number of Resistors:</label>
+        <select id="resistorCount" onchange="generateResistorInputs()">
+          <option value="">--Select--</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+
+      <div id="resistorInputs"></div>
+
+      <div class="form-row btn-row">
+        <button onclick="solveKirchhoff()">Solve Using KVL</button>
+      </div>
+      <p class="output" id="kvOutput">
+        Current (I): -- A<br />
+        Voltages: --
+      </p>
+    </section>
+
+    <a href="index.html" class="nav-button">⬅ Back</a>
+    <a href="circuitarea.html" class="nav-button">Enter Simulation</a>
+  </main>
+
+  <script>
+    // JavaScript functions 
+    function calculateOhmsLaw() {
+      let V = parseFloat(document.getElementById("voltage").value);
+      let I = parseFloat(document.getElementById("current").value);
+      let R = parseFloat(document.getElementById("resistance").value);
+
+      const V_valid = !isNaN(V);
+      const I_valid = !isNaN(I);
+      const R_valid = !isNaN(R);
+
+      if (!V_valid && I_valid && R_valid) {
+        V = I * R;
+        document.getElementById("voltage").value = V.toFixed(2);
+      } else if (!I_valid && V_valid && R_valid) {
+        I = V / R;
+        document.getElementById("current").value = I.toFixed(2);
+      } else if (!R_valid && V_valid && I_valid) {
+        R = V / I;
+        document.getElementById("resistance").value = R.toFixed(2);
+      } else {
+        alert("Please leave exactly one field blank to calculate it.");
+      }
+    }
+
+    function calculatePower() {
+      const V = parseFloat(document.getElementById("voltage").value);
+      const I = parseFloat(document.getElementById("current").value);
+      if (isNaN(V) || isNaN(I)) {
+        alert("Please enter valid Voltage and Current.");
+        return;
+      }
+      const P = V * I;
+      document.getElementById("powerOutput").textContent = `Power (P): ${P.toFixed(2)} W`;
+    }
+
+    function calculateTotalResistance() {
+      const type = document.getElementById("resistorType").value;
+      const input = document.getElementById("resistances").value;
+      const resistors = input.split(',').map(r => parseFloat(r.trim()));
+      if (resistors.some(isNaN)) {
+        alert("Please enter valid numbers for resistances.");
+        return;
+      }
+
+      let total;
+      if (type === "series") {
+        total = resistors.reduce((sum, r) => sum + r, 0);
+      } else {
+        const reciprocalSum = resistors.reduce((sum, r) => sum + 1 / r, 0);
+        total = 1 / reciprocalSum;
+      }
+
+      document.getElementById("totalResistanceOutput").textContent = `Total Resistance: ${total.toFixed(2)} Ω`;
+    }
+
+    function generateResistorInputs() {
+      const count = parseInt(document.getElementById("resistorCount").value);
+      const container = document.getElementById("resistorInputs");
+      container.innerHTML = '';
+      if (isNaN(count) || count < 1) return;
+
+      for (let i = 1; i <= count; i++) {
+        const row = document.createElement("div");
+        row.className = "form-row";
+        row.innerHTML = `
+          <label for="kvR${i}">Resistance R${i} (Ω):</label>
+          <input type="number" id="kvR${i}" required />
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    function solveKirchhoff() {
+      const V = parseFloat(document.getElementById("kvBattery").value);
+      const count = parseInt(document.getElementById("resistorCount").value);
+      const resistors = [];
+
+      for (let i = 1; i <= count; i++) {
+        const val = parseFloat(document.getElementById(`kvR${i}`).value);
+        if (isNaN(val) || val <= 0) {
+          alert(`Please enter a valid value for R${i}`);
+          return;
+        }
+        resistors.push(val);
+      }
+
+      if (isNaN(V) || V <= 0) {
+        alert("Please enter a valid battery voltage.");
+        return;
+      }
+
+      const totalResistance = resistors.reduce((sum, r) => sum + r, 0);
+      const I = V / totalResistance;
+      const voltages = resistors.map((r, i) => `V${i + 1} = ${(I * r).toFixed(2)} V`).join(', ');
+
+      document.getElementById("kvOutput").innerHTML = `Current (I): ${I.toFixed(2)} A<br/>${voltages}`;
+    }
+  </script>
+</body>
+</html>
