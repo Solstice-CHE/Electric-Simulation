@@ -31,7 +31,6 @@
       cursor: pointer;
       font-weight: bold;
       transition: background 0.2s;
-      
     }
 
     #toolbar button:hover {
@@ -329,6 +328,12 @@
       font-size: 10px;
       color: #333;
     }
+
+    .back-button {
+      margin-left: auto;
+      display: flex;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
@@ -342,13 +347,13 @@
     <button id="clearBtn">Clear</button>
     <button id="helpBtn">Help</button>
     <div class="back-button">
-    <a href="index.html">
+      <a href="index.html">
         <button id="back-button">Back</button>   
-    </a>
-    <a href="calculator.html">
+      </a>
+      <a href="calculator.html">
         <button id="calc-button">Calculator</button>   
-    </a>
-  </div>
+      </a>
+    </div>
   </div>
   <div id="canvas"></div>
   <svg id="connections"></svg>
@@ -362,827 +367,900 @@
   </div>
   
   <script>
-    const COMPONENTS = {
-      battery: {
-        label: "Battery",
-        svg: `<svg width="80" height="80" viewBox="0 0 80 80">
-          <rect x="20" y="20" width="40" height="40" rx="8" fill="#eee" stroke="#222" stroke-width="3"/>
-          <rect x="34" y="10" width="12" height="10" fill="#222"/>
-          <rect x="34" y="60" width="12" height="10" fill="#222"/>
-          <text x="40" y="45" text-anchor="middle" font-size="10" class="battery-value">1.5V</text>
-        </svg>`,
-        terminals: [{x: 40, y: 10}, {x: 40, y: 70}],
-        defaults: {
-          voltage: 1.5,
-          resistance: 0.1
-        }
-      },
-      resistor: {
-        label: "Resistor",
-        svg: `<svg width="80" height="80" viewBox="0 0 80 80">
-          <rect x="20" y="35" width="40" height="10" fill="#d2a679" stroke="#222" stroke-width="2"/>
-          <rect x="10" y="38" width="10" height="4" fill="#666"/>
-          <rect x="60" y="38" width="10" height="4" fill="#666"/>
-          <rect x="25" y="35" width="30" height="10" fill="#f7c873"/>
-          <text x="40" y="43" text-anchor="middle" font-size="8" class="resistor-value">10Ω</text>
-        </svg>`,
-        terminals: [{x: 10, y: 40}, {x: 70, y: 40}],
-        defaults: {
-          resistance: 10
-        }
-      },
-      lightbulb: {
-        label: "Light Bulb",
-        svg: `<svg width="80" height="80" viewBox="0 0 80 80">
-          <g class="bulb-rays" opacity="0">
-            <path d="M 40,5 L 40,15" stroke="#ffff00" stroke-width="2"/>
-            <path d="M 20,15 L 27,22" stroke="#ffff00" stroke-width="2"/>
-            <path d="M 60,15 L 53,22" stroke="#ffff00" stroke-width="2"/>
-            <path d="M 15,32 L 25,32" stroke="#ffff00" stroke-width="2"/>
-            <path d="M 65,32 L 55,32" stroke="#ffff00" stroke-width="2"/>
-          </g>
-          <ellipse class="bulb-glow" cx="40" cy="32" rx="18" ry="18" fill="#fffbe6" stroke="#e6c200" stroke-width="3"/>
-          <rect x="32" y="50" width="16" height="16" fill="#bbb" stroke="#888" stroke-width="2"/>
-          <path d="M 40,28 L 40,36" stroke="#e6c200" stroke-width="2"/>
-          <path d="M 36,32 L 44,32" stroke="#e6c200" stroke-width="2"/>
-        </svg>`,
-        terminals: [{x: 40, y: 10}, {x: 40, y: 66}],
-        defaults: {
-          resistance: 20,
-          brightness: 0,
-          maxBrightness: 1000,
-          efficiency: 0.9
-        }
-      },
-      switch: {
-        label: "Switch",
-        svg: `<svg width="80" height="80" viewBox="0 0 80 80" class="switch-svg">
-          <rect x="20" y="38" width="40" height="4" fill="#888"/>
-          <rect x="60" y="38" width="10" height="4" fill="#222"/>
-          <rect x="10" y="38" width="10" height="4" fill="#222"/>
-          <line x1="20" y1="40" x2="60" y2="40" stroke="#27ae60" stroke-width="4" class="switch-state"/>
-        </svg>`,
-        terminals: [{x: 10, y: 40}, {x: 70, y: 40}],
-        defaults: {
-          resistance: 0.01,
-          openResistance: 1e6,
-          isClosed: true
+// Component definitions
+const COMPONENTS = {
+  battery: {
+    label: "Battery",
+    svg: `<svg width="80" height="80" viewBox="0 0 80 80">
+      <rect x="20" y="20" width="40" height="40" rx="8" fill="#eee" stroke="#222" stroke-width="3"/>
+      <rect x="34" y="10" width="12" height="10" fill="#222"/>
+      <rect x="34" y="60" width="12" height="10" fill="#222"/>
+      <text x="40" y="45" text-anchor="middle" font-size="10" class="battery-value">1.5V</text>
+    </svg>`,
+    terminals: [{x: 40, y: 10}, {x: 40, y: 70}],
+    defaults: {
+      voltage: 1.5,
+      resistance: 0.1
+    }
+  },
+  resistor: {
+    label: "Resistor",
+    svg: `<svg width="80" height="80" viewBox="0 0 80 80">
+      <rect x="20" y="35" width="40" height="10" fill="#d2a679" stroke="#222" stroke-width="2"/>
+      <rect x="10" y="38" width="10" height="4" fill="#666"/>
+      <rect x="60" y="38" width="10" height="4" fill="#666"/>
+      <rect x="25" y="35" width="30" height="10" fill="#f7c873"/>
+      <text x="40" y="43" text-anchor="middle" font-size="8" class="resistor-value">10Ω</text>
+    </svg>`,
+    terminals: [{x: 10, y: 40}, {x: 70, y: 40}],
+    defaults: {
+      resistance: 10
+    }
+  },
+  lightbulb: {
+    label: "Light Bulb",
+    svg: `<svg width="80" height="80" viewBox="0 0 80 80">
+      <g class="bulb-rays" opacity="0">
+        <path d="M 40,5 L 40,15" stroke="#ffff00" stroke-width="2"/>
+        <path d="M 20,15 L 27,22" stroke="#ffff00" stroke-width="2"/>
+        <path d="M 60,15 L 53,22" stroke="#ffff00" stroke-width="2"/>
+        <path d="M 15,32 L 25,32" stroke="#ffff00" stroke-width="2"/>
+        <path d="M 65,32 L 55,32" stroke="#ffff00" stroke-width="2"/>
+      </g>
+      <ellipse class="bulb-glow" cx="40" cy="32" rx="18" ry="18" fill="#fffbe6" stroke="#e6c200" stroke-width="3"/>
+      <rect x="32" y="50" width="16" height="16" fill="#bbb" stroke="#888" stroke-width="2"/>
+      <path d="M 40,28 L 40,36" stroke="#e6c200" stroke-width="2"/>
+      <path d="M 36,32 L 44,32" stroke="#e6c200" stroke-width="2"/>
+    </svg>`,
+    terminals: [{x: 40, y: 10}, {x: 40, y: 66}],
+    defaults: {
+      resistance: 20,
+      brightness: 0,
+      maxBrightness: 1000,
+      efficiency: 0.9
+    }
+  },
+  switch: {
+    label: "Switch",
+    svg: `<svg width="80" height="80" viewBox="0 0 80 80" class="switch-svg">
+      <rect x="20" y="38" width="40" height="4" fill="#888"/>
+      <rect x="60" y="38" width="10" height="4" fill="#222"/>
+      <rect x="10" y="38" width="10" height="4" fill="#222"/>
+      <line x1="20" y1="40" x2="60" y2="40" stroke="#27ae60" stroke-width="4" class="switch-state"/>
+    </svg>`,
+    terminals: [{x: 10, y: 40}, {x: 70, y: 40}],
+    defaults: {
+      resistance: 0.01,
+      openResistance: 1e6,
+      isClosed: true
+    }
+  }
+};
+
+// DOM elements
+const canvas = document.getElementById('canvas');
+const connectionsSVG = document.getElementById('connections');
+const statusEl = document.getElementById('status');
+const wireBtn = document.getElementById('wireBtn');
+const deleteBtn = document.getElementById('deleteBtn');
+const clearBtn = document.getElementById('clearBtn');
+const helpBtn = document.getElementById('helpBtn');
+const componentProperties = document.getElementById('componentProperties');
+
+// Initialize SVG dimensions
+connectionsSVG.style.width = '100%';
+connectionsSVG.style.height = '100%';
+
+// State variables
+let compId = 0;
+let electronId = 0;
+const components = new Map();
+const wires = [];
+const electrons = new Map();
+let dragging = null;
+let dragOffset = {x:0, y:0};
+let wireMode = false;
+let deleteMode = false;
+let wireFrom = null;
+let tempLine = null;
+
+// Status display
+function setStatus(message) {
+  statusEl.textContent = message;
+}
+
+// Property panel update
+function updatePropertyPanel(comp) {
+  if (!comp) {
+    componentProperties.innerHTML = '<p>Select a component to view and edit its properties.</p>';
+    return;
+  }
+  
+  let html = `<h3>${COMPONENTS[comp.type].label}</h3>`;
+  
+  if (comp.type === 'battery') {
+    html += `
+      <div class="property-row">
+        <label for="batteryVoltage">Voltage (V)</label>
+        <input type="number" id="batteryVoltage" value="${comp.voltage}" step="0.1" min="0">
+      </div>
+      <div class="property-row">
+        <label for="batteryResistance">Internal Resistance (Ω)</label>
+        <input type="number" id="batteryResistance" value="${comp.resistance}" step="0.1" min="0">
+      </div>
+    `;
+  } else if (comp.type === 'resistor') {
+    html += `
+      <div class="property-row">
+        <label for="resistorResistance">Resistance (Ω)</label>
+        <input type="number" id="resistorResistance" value="${comp.resistance}" step="1" min="0">
+      </div>
+    `;
+  } else if (comp.type === 'lightbulb') {
+    html += `
+      <div class="property-row">
+        <label for="lightbulbResistance">Resistance (Ω)</label>
+        <input type="number" id="lightbulbResistance" value="${comp.resistance}" step="1" min="0">
+      </div>
+      <div class="property-row">
+        <label>Brightness</label>
+        <div>${Math.round(comp.brightness * 100)}%</div>
+      </div>
+    `;
+  } else if (comp.type === 'switch') {
+    html += `
+      <div class="property-row">
+        <label>State</label>
+        <div>${comp.isClosed ? 'Closed' : 'Open'}</div>
+      </div>
+      <div class="property-row">
+        <label for="switchResistance">Resistance When Closed (Ω)</label>
+        <input type="number" id="switchResistance" value="${comp.resistance}" step="0.1" min="0">
+      </div>
+    `;
+  }
+  
+  componentProperties.innerHTML = html;
+  
+  // Add event listeners for property changes
+  if (comp.type === 'battery') {
+    document.getElementById('batteryVoltage').addEventListener('change', (e) => {
+      comp.voltage = parseFloat(e.target.value);
+      validateCircuit();
+    });
+    document.getElementById('batteryResistance').addEventListener('change', (e) => {
+      comp.resistance = parseFloat(e.target.value);
+      validateCircuit();
+    });
+  } else if (comp.type === 'resistor') {
+    document.getElementById('resistorResistance').addEventListener('change', (e) => {
+      comp.resistance = parseFloat(e.target.value);
+      validateCircuit();
+    });
+  } else if (comp.type === 'lightbulb') {
+    document.getElementById('lightbulbResistance').addEventListener('change', (e) => {
+      comp.resistance = parseFloat(e.target.value);
+      validateCircuit();
+    });
+  } else if (comp.type === 'switch') {
+    document.getElementById('switchResistance').addEventListener('change', (e) => {
+      comp.resistance = parseFloat(e.target.value);
+      validateCircuit();
+    });
+  }
+}
+
+// Toolbar button event handlers
+document.querySelectorAll('#toolbar button[data-type]').forEach(btn => {
+  btn.onclick = () => {
+    exitAllModes();
+    const rect = canvas.getBoundingClientRect();
+    const x = 100 + Math.random() * (rect.width - 200);
+    const y = 100 + Math.random() * (rect.height - 200);
+    addComponent(btn.dataset.type, x, y);
+  };
+});
+
+wireBtn.onclick = function() {
+  exitAllModes();
+  wireMode = true;
+  this.classList.add('active');
+  canvas.style.cursor = 'crosshair';
+  setStatus('Wire mode: Click on a terminal to start connecting');
+};
+
+deleteBtn.onclick = function() {
+  exitAllModes();
+  deleteMode = true;
+  this.classList.add('active');
+  canvas.style.cursor = 'not-allowed';
+  setStatus('Delete mode: Click on components or wires to delete them');
+};
+
+clearBtn.onclick = () => {
+  if (confirm('Are you sure you want to clear all components?')) {
+    clearCanvas();
+  }
+};
+
+helpBtn.onclick = () => {
+  showHelp();
+};
+
+// Helper functions
+function exitAllModes() {
+  wireMode = false;
+  deleteMode = false;
+  wireBtn.classList.remove('active');
+  deleteBtn.classList.remove('active');
+  canvas.style.cursor = '';
+  wireFrom = null;
+  if (tempLine) {
+    connectionsSVG.removeChild(tempLine);
+    tempLine = null;
+  }
+}
+
+function showHelp() {
+  const helpOverlay = document.createElement('div');
+  helpOverlay.className = 'help-overlay';
+  helpOverlay.innerHTML = `
+    <div class="help-content">
+      <div class="help-title">
+        <h2>Circuit Simulator Help</h2>
+        <button class="close-button">&times;</button>
+      </div>
+      <div class="help-section">
+        <h3>Adding Components</h3>
+        <p>Click any component button in the toolbar to add it to the canvas.</p>
+      </div>
+      <div class="help-section">
+        <h3>Moving Components</h3>
+        <p>Click and drag any component to reposition it on the canvas.</p>
+      </div>
+      <div class="help-section">
+        <h3>Connecting Components</h3>
+        <p>1. Click the Wire button to enter wire mode</p>
+        <p>2. Click on a terminal (blue circle) of one component</p>
+        <p>3. Drag to a terminal of another component</p>
+        <p>4. Release to create a wire connection</p>
+      </div>
+      <div class="help-section">
+        <h3>Circuit Behavior</h3>
+        <p>- Light bulbs will illuminate when connected to power</p>
+        <p>- Switches can be toggled to open/close the circuit</p>
+        <p>- Electrons flow from negative to positive terminals</p>
+      </div>
+      <div class="help-section">
+        <h3>Deleting Items</h3>
+        <p>1. Click the Delete button to enter delete mode</p>
+        <p>2. Click on any component or wire to delete it</p>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(helpOverlay);
+  
+  helpOverlay.querySelector('.close-button').onclick = () => {
+    document.body.removeChild(helpOverlay);
+  };
+}
+
+// Component management
+function addComponent(type, x, y) {
+  const id = ++compId;
+  const comp = {
+    id, type, x, y,
+    terminals: COMPONENTS[type].terminals.map(t => ({...t})),
+    element: null,
+    ...COMPONENTS[type].defaults
+  };
+
+  if (type === 'switch') {
+    comp.isClosed = true;
+  } else if (type === 'lightbulb') {
+    comp.brightness = 0;
+  }
+  
+  const div = document.createElement('div');
+  div.className = 'component';
+  div.setAttribute('data-id', id);
+  div.style.left = x + 'px';
+  div.style.top = y + 'px';
+  div.innerHTML = COMPONENTS[type].svg + `<div class="label">${COMPONENTS[type].label}</div>`;
+  comp.element = div;
+  
+  // Add terminals
+  comp.terminals.forEach((t, idx) => {
+    const term = document.createElement('div');
+    term.className = 'terminal';
+    if (type === 'battery') {
+      term.classList.add(idx === 0 ? 'positive' : 'negative');
+    }
+    term.style.left = t.x + 'px';
+    term.style.top = t.y + 'px';
+    term.setAttribute('data-terminal', idx);
+    
+    term.onmousedown = e => {
+      if (!wireMode) return;
+      e.stopPropagation();
+      handleWireStart(comp, idx, e);
+    };
+    
+    div.appendChild(term);
+  });
+
+  // Component interaction handlers
+  div.onmousedown = e => {
+    if (wireMode || deleteMode) return;
+    
+    document.querySelectorAll('.component').forEach(el => {
+      el.classList.remove('selected');
+    });
+    div.classList.add('selected');
+    updatePropertyPanel(comp);
+    
+    const canvasRect = canvas.getBoundingClientRect();
+    dragging = comp;
+    dragOffset.x = e.clientX - canvasRect.left - comp.x;
+    dragOffset.y = e.clientY - canvasRect.top - comp.y;
+    setStatus(`Moving ${COMPONENTS[comp.type].label}...`);
+    e.preventDefault();
+  };
+
+  div.onclick = e => {
+    if (deleteMode) {
+      handleDelete(comp);
+      e.stopPropagation();
+      return;
+    }
+    
+    if (comp.type === 'switch') {
+      toggleSwitch(comp);
+      e.stopPropagation();
+      validateCircuit();
+    } else {
+      document.querySelectorAll('.component').forEach(el => {
+        el.classList.remove('selected');
+      });
+      div.classList.add('selected');
+      updatePropertyPanel(comp);
+    }
+  };
+
+  canvas.appendChild(div);
+  components.set(id, comp);
+  setStatus(`${COMPONENTS[comp.type].label} added`);
+  validateCircuit();
+  
+  return comp;
+}
+
+function toggleSwitch(comp) {
+  if (comp.type !== 'switch') return;
+  
+  comp.isClosed = !comp.isClosed;
+  const switchLine = comp.element.querySelector('.switch-state');
+  
+  if (comp.isClosed) {
+    switchLine.setAttribute('stroke', '#27ae60');
+    switchLine.setAttribute('x1', '20');
+    switchLine.setAttribute('x2', '60');
+    switchLine.setAttribute('transform', '');
+    comp.resistance = 0.01;
+  } else {
+    switchLine.setAttribute('stroke', '#c0392b');
+    switchLine.setAttribute('x1', '20');
+    switchLine.setAttribute('x2', '40');
+    switchLine.setAttribute('transform', 'rotate(-45, 20, 40)');
+    comp.resistance = 1e6;
+  }
+  
+  setStatus(`Switch turned ${comp.isClosed ? 'CLOSED' : 'OPEN'}`);
+  validateCircuit();
+}
+
+function getTerminalAbsPos(comp, idx) {
+  return {
+    x: comp.x + comp.terminals[idx].x,
+    y: comp.y + comp.terminals[idx].y
+  };
+}
+
+function updateWirePositions() {
+  for (const wire of wires) {
+    const from = getTerminalAbsPos(wire.from.comp, wire.from.idx);
+    const to = getTerminalAbsPos(wire.to.comp, wire.to.idx);
+    wire.line.setAttribute('x1', from.x);
+    wire.line.setAttribute('y1', from.y);
+    wire.line.setAttribute('x2', to.x);
+    wire.line.setAttribute('y2', to.y);
+  }
+  validateCircuit();
+}
+
+// Wire connection functions
+function createWireConnection(fromComp, fromIdx, toComp, toIdx) {
+  const from = getTerminalAbsPos(fromComp, fromIdx);
+  const to = getTerminalAbsPos(toComp, toIdx);
+
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.classList.add('wire');
+  line.setAttribute('x1', from.x);
+  line.setAttribute('y1', from.y);
+  line.setAttribute('x2', to.x);
+  line.setAttribute('y2', to.y);
+  line.setAttribute('data-from-comp', fromComp.id);
+  line.setAttribute('data-from-terminal', fromIdx);
+  line.setAttribute('data-to-comp', toComp.id);
+  line.setAttribute('data-to-terminal', toIdx);
+  connectionsSVG.appendChild(line);
+
+  const wire = {
+    from: { comp: fromComp, idx: fromIdx },
+    to: { comp: toComp, idx: toIdx },
+    line
+  };
+  
+  wires.push(wire);
+
+  line.addEventListener('click', e => {
+    if (deleteMode) {
+      wires.splice(wires.indexOf(wire), 1);
+      connectionsSVG.removeChild(line);
+      setStatus('Wire removed');
+      validateCircuit();
+      removeElectronsForWire(wire);
+    } else {
+      document.querySelectorAll('line.wire').forEach(l => l.classList.remove('selected'));
+      line.classList.add('selected');
+      const handleCanvasClick = () => {
+        line.classList.remove('selected');
+        canvas.removeEventListener('click', handleCanvasClick);
+      };
+      canvas.addEventListener('click', handleCanvasClick);
+    }
+    e.stopPropagation();
+  });
+
+  validateCircuit();
+  return wire;
+}
+
+function handleWireStart(comp, idx, e) {
+  e.stopPropagation();
+  wireFrom = { comp, idx };
+  setStatus('Drawing wire... Drag to another terminal');
+
+  const terminalPos = getTerminalAbsPos(comp, idx);
+  tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  tempLine.classList.add('wire');
+  tempLine.setAttribute('x1', terminalPos.x);
+  tempLine.setAttribute('y1', terminalPos.y);
+  tempLine.setAttribute('x2', terminalPos.x);
+  tempLine.setAttribute('y2', terminalPos.y);
+  tempLine.setAttribute('stroke-dasharray', '5,3');
+  connectionsSVG.appendChild(tempLine);
+
+  function moveHandler(moveEvent) {
+    const canvasRect = canvas.getBoundingClientRect();
+    const x = moveEvent.clientX - canvasRect.left;
+    const y = moveEvent.clientY - canvasRect.top;
+    tempLine.setAttribute('x2', x);
+    tempLine.setAttribute('y2', y);
+  }
+
+  function upHandler(upEvent) {
+    document.removeEventListener('mousemove', moveHandler);
+    document.removeEventListener('mouseup', upHandler);
+
+    let foundTerminal = null;
+    components.forEach(c => {
+      if (foundTerminal) return;
+
+      for (let i = 0; i < c.terminals.length; i++) {
+        const pos = getTerminalAbsPos(c, i);
+        const canvasRect = canvas.getBoundingClientRect();
+        const dx = upEvent.clientX - canvasRect.left - pos.x;
+        const dy = upEvent.clientY - canvasRect.top - pos.y;
+        if (Math.sqrt(dx*dx + dy*dy) < 12 && !(c === comp && i === idx)) {
+          foundTerminal = { comp: c, idx: i };
+          break;
         }
       }
-    };
+    });
 
-    const canvas = document.getElementById('canvas');
-    const connectionsSVG = document.getElementById('connections');
-    const statusEl = document.getElementById('status');
-    const wireBtn = document.getElementById('wireBtn');
-    const deleteBtn = document.getElementById('deleteBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const helpBtn = document.getElementById('helpBtn');
-    const componentProperties = document.getElementById('componentProperties');
-    
-    connectionsSVG.style.width = '100%';
-    connectionsSVG.style.height = '100%';
-    
-    let compId = 0;
-    let electronId = 0;
-    const components = new Map();
-    const wires = [];
-    const electrons = new Map();
-    let dragging = null;
-    let dragOffset = {x:0, y:0};
-    let wireMode = false;
-    let deleteMode = false;
-    let wireFrom = null;
-    let tempLine = null;
-    let circuitValidationInterval = null;
-
-    function setStatus(message) {
-      statusEl.textContent = message;
+    if (foundTerminal) {
+      const to = getTerminalAbsPos(foundTerminal.comp, foundTerminal.idx);
+      tempLine.setAttribute('x2', to.x);
+      tempLine.setAttribute('y2', to.y);
+      
+      let wireExists = false;
+      for (const wire of wires) {
+        if ((wire.from.comp.id === wireFrom.comp.id && wire.from.idx === wireFrom.idx &&
+             wire.to.comp.id === foundTerminal.comp.id && wire.to.idx === foundTerminal.idx) ||
+            (wire.from.comp.id === foundTerminal.comp.id && wire.from.idx === foundTerminal.idx &&
+             wire.to.comp.id === wireFrom.comp.id && wire.to.idx === wireFrom.idx)) {
+          wireExists = true;
+          break;
+        }
+      }
+      
+      connectionsSVG.removeChild(tempLine);
+      tempLine = null;
+      
+      if (wireExists) {
+        setStatus('Wire already exists between these terminals');
+      } else {
+        createWireConnection(wireFrom.comp, wireFrom.idx, foundTerminal.comp, foundTerminal.idx);
+        setStatus('Connection created!');
+      }
+    } else {
+      connectionsSVG.removeChild(tempLine);
+      tempLine = null;
+      setStatus('Connection canceled');
     }
+    
+    wireFrom = null;
+  }
 
-    function updatePropertyPanel(comp) {
-      if (!comp) {
-        componentProperties.innerHTML = '<p>Select a component to view and edit its properties.</p>';
+  document.addEventListener('mousemove', moveHandler);
+  document.addEventListener('mouseup', upHandler);
+}
+
+// Deletion functions
+function handleDelete(comp) {
+  const wiresToRemove = wires.filter(
+    w => w.from.comp === comp || w.to.comp === comp
+  );
+  
+  wiresToRemove.forEach(wire => {
+    connectionsSVG.removeChild(wire.line);
+    removeElectronsForWire(wire);
+    wires.splice(wires.indexOf(wire), 1);
+  });
+  
+  canvas.removeChild(comp.element);
+  components.delete(comp.id);
+  setStatus(`${COMPONENTS[comp.type].label} removed`);
+  validateCircuit();
+}
+
+function removeElectronsForWire(wire) {
+  electrons.forEach((electron, id) => {
+    if (electron.wire === wire) {
+      connectionsSVG.removeChild(electron.element);
+      electrons.delete(id);
+    }
+  });
+}
+
+function clearCanvas() {
+  exitAllModes();
+  electrons.forEach(electron => {
+    connectionsSVG.removeChild(electron.element);
+  });
+  electrons.clear();
+  wires.forEach(wire => {
+    connectionsSVG.removeChild(wire.line);
+  });
+  wires.length = 0;
+  components.forEach(comp => {
+    canvas.removeChild(comp.element);
+  });
+  components.clear();
+  resetAllBulbs();
+  setStatus('Canvas cleared');
+}
+
+// Circuit validation and analysis
+function validateCircuit() {
+  electrons.forEach(electron => {
+    connectionsSVG.removeChild(electron.element);
+  });
+  electrons.clear();
+  resetAllBulbs();
+  wires.forEach(wire => {
+    wire.line.classList.remove('active');
+  });
+  
+  // First find all batteries in the circuit
+  const batteries = Array.from(components.values()).filter(c => c.type === 'battery');
+  
+  if (batteries.length === 0) {
+    setStatus('No power source in circuit');
+    return;
+  }
+  
+  // For each battery, check connections
+  batteries.forEach(battery => {
+    // Check all wires connected to this battery
+    const connectedWires = wires.filter(w => 
+      w.from.comp.id === battery.id || w.to.comp.id === battery.id
+    );
+    
+    connectedWires.forEach(wire => {
+      // Get the other component connected to this battery
+      const otherComp = wire.from.comp.id === battery.id ? wire.to.comp : wire.from.comp;
+      
+      // If it's a lightbulb, light it up regardless of complete circuit
+      if (otherComp.type === 'lightbulb') {
+        const bulbGlow = otherComp.element.querySelector('.bulb-glow');
+        const bulbRays = otherComp.element.querySelector('.bulb-rays');
+        if (bulbGlow) {
+          bulbGlow.classList.add('lit');
+        }
+        if (bulbRays) {
+          bulbRays.classList.add('lit');
+        }
+        otherComp.brightness = 0.5; // Partial brightness
+        updatePropertyPanel(otherComp);
+        wire.line.classList.add('active');
+        addElectronsToWire(wire);
+        setStatus('Light connected to power source');
+      }
+    });
+    
+    // Also check for complete circuits (with or without switches)
+    const circuitGraph = buildCircuitGraph();
+    const visited = new Set();
+    const path = [];
+    
+    if (findCircuitPath(circuitGraph, battery.id, battery.id, visited, path)) {
+      // Calculate total voltage and resistance
+      let totalVoltage = 0;
+      let totalResistance = 0;
+      
+      path.forEach(componentId => {
+        const comp = components.get(componentId);
+        if (!comp) return;
+        
+        if (comp.type === 'battery') {
+          totalVoltage += comp.voltage;
+          totalResistance += comp.resistance;
+        } else if (comp.type === 'resistor' || comp.type === 'lightbulb') {
+          totalResistance += comp.resistance;
+        } else if (comp.type === 'switch') {
+          // Only add switch resistance if it's closed
+          if (comp.isClosed) {
+            totalResistance += comp.resistance;
+          } else {
+            // If switch is open, treat it as infinite resistance (open circuit)
+            totalResistance = Infinity;
+          }
+        }
+      });
+      
+      if (totalResistance === Infinity) {
+        setStatus('Circuit open (switch is open)');
         return;
       }
       
-      let html = `<h3>${COMPONENTS[comp.type].label}</h3>`;
-      
-      if (comp.type === 'battery') {
-        html += `
-          <div class="property-row">
-            <label for="batteryVoltage">Voltage (V)</label>
-            <input type="number" id="batteryVoltage" value="${comp.voltage}" step="0.1" min="0">
-          </div>
-          <div class="property-row">
-            <label for="batteryResistance">Internal Resistance (Ω)</label>
-            <input type="number" id="batteryResistance" value="${comp.resistance}" step="0.1" min="0">
-          </div>
-        `;
-      } else if (comp.type === 'resistor') {
-        html += `
-          <div class="property-row">
-            <label for="resistorResistance">Resistance (Ω)</label>
-            <input type="number" id="resistorResistance" value="${comp.resistance}" step="1" min="0">
-          </div>
-        `;
-      } else if (comp.type === 'lightbulb') {
-        html += `
-          <div class="property-row">
-            <label for="lightbulbResistance">Resistance (Ω)</label>
-            <input type="number" id="lightbulbResistance" value="${comp.resistance}" step="1" min="0">
-          </div>
-          <div class="property-row">
-            <label>Brightness</label>
-            <div>${Math.round(comp.brightness * 100)}%</div>
-          </div>
-        `;
-      } else if (comp.type === 'switch') {
-        html += `
-          <div class="property-row">
-            <label>State</label>
-            <div>${comp.isClosed ? 'Closed' : 'Open'}</div>
-          </div>
-          <div class="property-row">
-            <label for="switchResistance">Resistance When Closed (Ω)</label>
-            <input type="number" id="switchResistance" value="${comp.resistance}" step="0.1" min="0">
-          </div>
-        `;
+      if (totalResistance === 0) {
+        setStatus('Warning: Short circuit detected!');
+        return;
       }
       
-      componentProperties.innerHTML = html;
+      const current = totalVoltage / totalResistance;
       
-      if (comp.type === 'battery') {
-        document.getElementById('batteryVoltage').addEventListener('change', (e) => {
-          comp.voltage = parseFloat(e.target.value);
-          validateCircuit();
-        });
-        document.getElementById('batteryResistance').addEventListener('change', (e) => {
-          comp.resistance = parseFloat(e.target.value);
-          validateCircuit();
-        });
-      } else if (comp.type === 'resistor') {
-        document.getElementById('resistorResistance').addEventListener('change', (e) => {
-          comp.resistance = parseFloat(e.target.value);
-          validateCircuit();
-        });
-      } else if (comp.type === 'lightbulb') {
-        document.getElementById('lightbulbResistance').addEventListener('change', (e) => {
-          comp.resistance = parseFloat(e.target.value);
-          validateCircuit();
-        });
-      } else if (comp.type === 'switch') {
-        document.getElementById('switchResistance').addEventListener('change', (e) => {
-          comp.resistance = parseFloat(e.target.value);
-          validateCircuit();
-        });
-      }
-    }
-
-    document.querySelectorAll('#toolbar button[data-type]').forEach(btn => {
-      btn.onclick = () => {
-        exitAllModes();
-        const rect = canvas.getBoundingClientRect();
-        const x = 100 + Math.random() * (rect.width - 200);
-        const y = 100 + Math.random() * (rect.height - 200);
-        addComponent(btn.dataset.type, x, y);
-      };
-    });
-
-    wireBtn.onclick = function() {
-      exitAllModes();
-      wireMode = true;
-      this.classList.add('active');
-      canvas.style.cursor = 'crosshair';
-      setStatus('Wire mode: Click on a terminal to start connecting');
-    };
-
-    deleteBtn.onclick = function() {
-      exitAllModes();
-      deleteMode = true;
-      this.classList.add('active');
-      canvas.style.cursor = 'not-allowed';
-      setStatus('Delete mode: Click on components or wires to delete them');
-    };
-
-    clearBtn.onclick = () => {
-      if (confirm('Are you sure you want to clear all components?')) {
-        clearCanvas();
-      }
-    };
-
-    helpBtn.onclick = () => {
-      showHelp();
-    };
-
-    function exitAllModes() {
-      wireMode = false;
-      deleteMode = false;
-      wireBtn.classList.remove('active');
-      deleteBtn.classList.remove('active');
-      canvas.style.cursor = '';
-      wireFrom = null;
-      if (tempLine) {
-        connectionsSVG.removeChild(tempLine);
-        tempLine = null;
-      }
-    }
-
-    function showHelp() {
-      const helpOverlay = document.createElement('div');
-      helpOverlay.className = 'help-overlay';
-      helpOverlay.innerHTML = `
-        <div class="help-content">
-          <div class="help-title">
-            <h2>Circuit Simulator Help</h2>
-            <button class="close-button">&times;</button>
-          </div>
-          <div class="help-section">
-            <h3>Adding Components</h3>
-            <p>Click any component button in the toolbar to add it to the canvas.</p>
-          </div>
-          <div class="help-section">
-            <h3>Moving Components</h3>
-            <p>Click and drag any component to reposition it on the canvas.</p>
-          </div>
-          <div class="help-section">
-            <h3>Connecting Components</h3>
-            <p>1. Click the Wire button to enter wire mode</p>
-            <p>2. Click on a terminal (blue circle) of one component</p>
-            <p>3. Drag to a terminal of another component</p>
-            <p>4. Release to create a wire connection</p>
-          </div>
-          <div class="help-section">
-            <h3>Circuit Behavior</h3>
-            <p>- Light bulbs will illuminate when part of a complete circuit</p>
-            <p>- Switches can be toggled to open/close the circuit</p>
-            <p>- Electrons flow from negative to positive terminals</p>
-          </div>
-          <div class="help-section">
-            <h3>Deleting Items</h3>
-            <p>1. Click the Delete button to enter delete mode</p>
-            <p>2. Click on any component or wire to delete it</p>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(helpOverlay);
-      
-      helpOverlay.querySelector('.close-button').onclick = () => {
-        document.body.removeChild(helpOverlay);
-      };
-    }
-
-    function addComponent(type, x, y) {
-      const id = ++compId;
-      const comp = {
-        id, type, x, y,
-        terminals: COMPONENTS[type].terminals.map(t => ({...t})),
-        element: null,
-        ...COMPONENTS[type].defaults
-      };
-
-      if (type === 'switch') {
-        comp.isClosed = true;
-      } else if (type === 'lightbulb') {
-        comp.brightness = 0;
-      }
-      
-      const div = document.createElement('div');
-      div.className = 'component';
-      div.setAttribute('data-id', id);
-      div.style.left = x + 'px';
-      div.style.top = y + 'px';
-      div.innerHTML = COMPONENTS[type].svg + `<div class="label">${COMPONENTS[type].label}</div>`;
-      comp.element = div;
-      
-      comp.terminals.forEach((t, idx) => {
-        const term = document.createElement('div');
-        term.className = 'terminal';
-        if (type === 'battery') {
-          term.classList.add(idx === 0 ? 'positive' : 'negative');
-        }
-        term.style.left = t.x + 'px';
-        term.style.top = t.y + 'px';
-        term.setAttribute('data-terminal', idx);
+      // Update components in the circuit path
+      path.forEach(componentId => {
+        const comp = components.get(componentId);
+        if (!comp) return;
         
-        term.onmousedown = e => {
-          if (!wireMode) return;
-          e.stopPropagation();
-          handleWireStart(comp, idx, e);
-        };
+        let voltageDrop = 0;
+        let power = 0;
         
-        div.appendChild(term);
-      });
-
-      div.onmousedown = e => {
-        if (wireMode || deleteMode) return;
-        
-        document.querySelectorAll('.component').forEach(el => {
-          el.classList.remove('selected');
-        });
-        div.classList.add('selected');
-        updatePropertyPanel(comp);
-        
-        const canvasRect = canvas.getBoundingClientRect();
-        dragging = comp;
-        dragOffset.x = e.clientX - canvasRect.left - comp.x;
-        dragOffset.y = e.clientY - canvasRect.top - comp.y;
-        setStatus(`Moving ${COMPONENTS[comp.type].label}...`);
-        e.preventDefault();
-      };
-
-      div.onclick = e => {
-        if (deleteMode) {
-          handleDelete(comp);
-          e.stopPropagation();
-          return;
+        if (comp.type === 'battery') {
+          voltageDrop = comp.voltage;
+          power = current * current * comp.resistance;
+        } else if (comp.type === 'resistor' || comp.type === 'lightbulb') {
+          voltageDrop = current * comp.resistance;
+          power = current * current * comp.resistance;
+        } else if (comp.type === 'switch' && comp.isClosed) {
+          voltageDrop = current * comp.resistance;
+          power = current * current * comp.resistance;
         }
         
-        if (comp.type === 'switch') {
-          toggleSwitch(comp);
-          e.stopPropagation();
-          validateCircuit();
-        } else {
-          document.querySelectorAll('.component').forEach(el => {
-            el.classList.remove('selected');
-          });
-          div.classList.add('selected');
-          updatePropertyPanel(comp);
-        }
-      };
-
-      canvas.appendChild(div);
-      components.set(id, comp);
-      setStatus(`${COMPONENTS[comp.type].label} added`);
-      validateCircuit();
-      
-      return comp;
-    }
-
-    function toggleSwitch(comp) {
-      if (comp.type !== 'switch') return;
-      
-      comp.isClosed = !comp.isClosed;
-      const switchLine = comp.element.querySelector('.switch-state');
-      
-      if (comp.isClosed) {
-        switchLine.setAttribute('stroke', '#27ae60');
-        switchLine.setAttribute('x1', '20');
-        switchLine.setAttribute('x2', '60');
-        switchLine.setAttribute('transform', '');
-        comp.resistance = 0.01;
-      } else {
-        switchLine.setAttribute('stroke', '#c0392b');
-        switchLine.setAttribute('x1', '20');
-        switchLine.setAttribute('x2', '40');
-        switchLine.setAttribute('transform', 'rotate(-45, 20, 40)');
-        comp.resistance = 1e6;
-      }
-      
-      setStatus(`Switch turned ${comp.isClosed ? 'CLOSED' : 'OPEN'}`);
-      validateCircuit();
-    }
-
-    function getTerminalAbsPos(comp, idx) {
-      return {
-        x: comp.x + comp.terminals[idx].x,
-        y: comp.y + comp.terminals[idx].y
-      };
-    }
-
-    function updateWirePositions() {
-      for (const wire of wires) {
-        const from = getTerminalAbsPos(wire.from.comp, wire.from.idx);
-        const to = getTerminalAbsPos(wire.to.comp, wire.to.idx);
-        wire.line.setAttribute('x1', from.x);
-        wire.line.setAttribute('y1', from.y);
-        wire.line.setAttribute('x2', to.x);
-        wire.line.setAttribute('y2', to.y);
-      }
-      validateCircuit();
-    }
-
-    function createWireConnection(fromComp, fromIdx, toComp, toIdx) {
-      const from = getTerminalAbsPos(fromComp, fromIdx);
-      const to = getTerminalAbsPos(toComp, toIdx);
-
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.classList.add('wire');
-      line.setAttribute('x1', from.x);
-      line.setAttribute('y1', from.y);
-      line.setAttribute('x2', to.x);
-      line.setAttribute('y2', to.y);
-      line.setAttribute('data-from-comp', fromComp.id);
-      line.setAttribute('data-from-terminal', fromIdx);
-      line.setAttribute('data-to-comp', toComp.id);
-      line.setAttribute('data-to-terminal', toIdx);
-      connectionsSVG.appendChild(line);
-
-      const wire = {
-        from: { comp: fromComp, idx: fromIdx },
-        to: { comp: toComp, idx: toIdx },
-        line
-      };
-      
-      wires.push(wire);
-
-      line.addEventListener('click', e => {
-        if (deleteMode) {
-          wires.splice(wires.indexOf(wire), 1);
-          connectionsSVG.removeChild(line);
-          setStatus('Wire removed');
-          validateCircuit();
-          removeElectronsForWire(wire);
-        } else {
-          document.querySelectorAll('line.wire').forEach(l => l.classList.remove('selected'));
-          line.classList.add('selected');
-          const handleCanvasClick = () => {
-            line.classList.remove('selected');
-            canvas.removeEventListener('click', handleCanvasClick);
-          };
-          canvas.addEventListener('click', handleCanvasClick);
-        }
-        e.stopPropagation();
-      });
-
-      validateCircuit();
-      return wire;
-    }
-
-    function handleWireStart(comp, idx, e) {
-      e.stopPropagation();
-      wireFrom = { comp, idx };
-      setStatus('Drawing wire... Drag to another terminal');
-
-      const terminalPos = getTerminalAbsPos(comp, idx);
-      tempLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      tempLine.classList.add('wire');
-      tempLine.setAttribute('x1', terminalPos.x);
-      tempLine.setAttribute('y1', terminalPos.y);
-      tempLine.setAttribute('x2', terminalPos.x);
-      tempLine.setAttribute('y2', terminalPos.y);
-      tempLine.setAttribute('stroke-dasharray', '5,3');
-      connectionsSVG.appendChild(tempLine);
-
-      function moveHandler(moveEvent) {
-        const canvasRect = canvas.getBoundingClientRect();
-        const x = moveEvent.clientX - canvasRect.left;
-        const y = moveEvent.clientY - canvasRect.top;
-        tempLine.setAttribute('x2', x);
-        tempLine.setAttribute('y2', y);
-      }
-
-      function upHandler(upEvent) {
-        document.removeEventListener('mousemove', moveHandler);
-        document.removeEventListener('mouseup', upHandler);
-
-        let foundTerminal = null;
-        components.forEach(c => {
-          if (foundTerminal) return;
-
-          for (let i = 0; i < c.terminals.length; i++) {
-            const pos = getTerminalAbsPos(c, i);
-            const canvasRect = canvas.getBoundingClientRect();
-            const dx = upEvent.clientX - canvasRect.left - pos.x;
-            const dy = upEvent.clientY - canvasRect.top - pos.y;
-            if (Math.sqrt(dx*dx + dy*dy) < 12 && !(c === comp && i === idx)) {
-              foundTerminal = { comp: c, idx: i };
-              break;
-            }
-          }
-        });
-
-        if (foundTerminal) {
-          const to = getTerminalAbsPos(foundTerminal.comp, foundTerminal.idx);
-          tempLine.setAttribute('x2', to.x);
-          tempLine.setAttribute('y2', to.y);
-          
-          let wireExists = false;
-          for (const wire of wires) {
-            if ((wire.from.comp.id === wireFrom.comp.id && wire.from.idx === wireFrom.idx &&
-                 wire.to.comp.id === foundTerminal.comp.id && wire.to.idx === foundTerminal.idx) ||
-                (wire.from.comp.id === foundTerminal.comp.id && wire.from.idx === foundTerminal.idx &&
-                 wire.to.comp.id === wireFrom.comp.id && wire.to.idx === wireFrom.idx)) {
-              wireExists = true;
-              break;
-            }
-          }
-          
-          connectionsSVG.removeChild(tempLine);
-          tempLine = null;
-          
-          if (wireExists) {
-            setStatus('Wire already exists between these terminals');
-          } else {
-            createWireConnection(wireFrom.comp, wireFrom.idx, foundTerminal.comp, foundTerminal.idx);
-            setStatus('Connection created!');
-          }
-        } else {
-          connectionsSVG.removeChild(tempLine);
-          tempLine = null;
-          setStatus('Connection canceled');
-        }
+        comp.currentVoltage = voltageDrop;
+        comp.currentCurrent = current;
+        comp.currentPower = power;
         
-        wireFrom = null;
-      }
-
-      document.addEventListener('mousemove', moveHandler);
-      document.addEventListener('mouseup', upHandler);
-    }
-
-    function handleDelete(comp) {
-      const wiresToRemove = wires.filter(
-        w => w.from.comp === comp || w.to.comp === comp
-      );
-      
-      wiresToRemove.forEach(wire => {
-        connectionsSVG.removeChild(wire.line);
-        removeElectronsForWire(wire);
-        wires.splice(wires.indexOf(wire), 1);
-      });
-      
-      canvas.removeChild(comp.element);
-      components.delete(comp.id);
-      setStatus(`${COMPONENTS[comp.type].label} removed`);
-      validateCircuit();
-    }
-
-    function removeElectronsForWire(wire) {
-      electrons.forEach((electron, id) => {
-        if (electron.wire === wire) {
-          connectionsSVG.removeChild(electron.element);
-          electrons.delete(id);
-        }
-      });
-    }
-
-    function clearCanvas() {
-      exitAllModes();
-      electrons.forEach(electron => {
-        connectionsSVG.removeChild(electron.element);
-      });
-      electrons.clear();
-      wires.forEach(wire => {
-        connectionsSVG.removeChild(wire.line);
-      });
-      wires.length = 0;
-      components.forEach(comp => {
-        canvas.removeChild(comp.element);
-      });
-      components.clear();
-      resetAllBulbs();
-      setStatus('Canvas cleared');
-    }
-    
-    function validateCircuit() {
-      electrons.forEach(electron => {
-        connectionsSVG.removeChild(electron.element);
-      });
-      electrons.clear();
-      resetAllBulbs();
-      wires.forEach(wire => {
-        wire.line.classList.remove('active');
-      });
-      
-      const completedCircuits = findCompletedCircuits();
-      
-      if (completedCircuits.length > 0) {
-        completedCircuits.forEach(circuit => {
-          let totalVoltage = 0;
-          let totalResistance = 0;
-          
-          circuit.forEach(componentId => {
-            const comp = components.get(componentId);
-            if (comp.type === 'battery') {
-              totalVoltage += comp.voltage;
-              totalResistance += comp.resistance;
-            } else if (comp.type === 'resistor' || comp.type === 'lightbulb' || 
-                      (comp.type === 'switch' && comp.isClosed)) {
-              totalResistance += comp.resistance;
-            }
-          });
-          
-          const current = totalVoltage / totalResistance;
-          
-          circuit.forEach(componentId => {
-            const comp = components.get(componentId);
-            if (!comp) return;
-            
-            let voltageDrop = 0;
-            let power = 0;
-            
-            if (comp.type === 'battery') {
-              voltageDrop = comp.voltage;
-              power = current * current * comp.resistance;
-            } else if (comp.type === 'resistor' || comp.type === 'lightbulb' || 
-                      (comp.type === 'switch' && comp.isClosed)) {
-              voltageDrop = current * comp.resistance;
-              power = current * current * comp.resistance;
-            }
-            
-            comp.currentVoltage = voltageDrop;
-            comp.currentCurrent = current;
-            comp.currentPower = power;
-            
-            if (comp.type === 'lightbulb') {
-              const bulbGlow = comp.element.querySelector('.bulb-glow');
-              const bulbRays = comp.element.querySelector('.bulb-rays');
-              if (bulbGlow) {
-                bulbGlow.classList.add('lit');
-              }
-              if (bulbRays) {
-                bulbRays.classList.add('lit');
-              }
-              comp.brightness = Math.min(1, power / comp.maxBrightness);
-              updatePropertyPanel(comp); // Update brightness display in property panel
-            }
-          });
-          
-          const circuitWires = wires.filter(wire => 
-            circuit.includes(wire.from.comp.id) && circuit.includes(wire.to.comp.id)
-          );
-          
-          circuitWires.forEach(wire => {
-            wire.line.classList.add('active');
-            addElectronsToWire(wire);
-          });
-          
-          setStatus('Circuit complete! Current is flowing.');
-        });
-      } else {
-        setStatus('Circuit incomplete. Connect components to form a complete path.');
-      }
-    }
-    
-    function resetAllBulbs() {
-      components.forEach(comp => {
         if (comp.type === 'lightbulb') {
           const bulbGlow = comp.element.querySelector('.bulb-glow');
           const bulbRays = comp.element.querySelector('.bulb-rays');
           if (bulbGlow) {
-            bulbGlow.classList.remove('lit');
+            bulbGlow.classList.add('lit');
           }
           if (bulbRays) {
-            bulbRays.classList.remove('lit');
+            bulbRays.classList.add('lit');
           }
-          comp.brightness = 0;
-          updatePropertyPanel(comp); // Update brightness display in property panel
-        }
-      });
-    }
-    
-    function findCompletedCircuits() {
-      const completedCircuits = [];
-      const visitedComponents = new Set();
-      
-      components.forEach(comp => {
-        if (comp.type === 'battery' && !visitedComponents.has(comp.id)) {
-          const circuitGraph = buildCircuitGraph();
-          const circuit = [];
-          const visiting = new Set();
-          
-          if (findCircuitPath(circuitGraph, comp.id, comp.id, new Set(), circuit, visiting)) {
-            circuit.forEach(id => visitedComponents.add(id));
-            completedCircuits.push([...circuit]);
-          }
+          comp.brightness = Math.min(1, power / comp.maxBrightness);
+          updatePropertyPanel(comp);
         }
       });
       
-      return completedCircuits;
-    }
-    
-    function findCircuitPath(graph, currentNode, targetNode, visited, path, visiting) {
-      visiting.add(currentNode);
+      // Activate wires in the circuit path
+      const circuitWires = wires.filter(wire => 
+        path.includes(wire.from.comp.id) && path.includes(wire.to.comp.id)
+      );
       
-      for (const neighbor of (graph[currentNode] || [])) {
-        if (neighbor === targetNode && path.length >= 2) { // Changed from 3 to 2 to allow battery-bulb direct connection
-          path.push(neighbor);
-          return true;
-        }
-        
-        if (visiting.has(neighbor)) continue;
-        
-        visited.add(neighbor);
-        path.push(neighbor);
-        
-        if (findCircuitPath(graph, neighbor, targetNode, visited, path, visiting)) {
-          return true;
-        }
-        
-        path.pop();
+      circuitWires.forEach(wire => {
+        wire.line.classList.add('active');
+        addElectronsToWire(wire);
+      });
+      
+      setStatus('Circuit complete! Current is flowing.');
+    }
+  });
+}
+
+function resetAllBulbs() {
+  components.forEach(comp => {
+    if (comp.type === 'lightbulb') {
+      const bulbGlow = comp.element.querySelector('.bulb-glow');
+      const bulbRays = comp.element.querySelector('.bulb-rays');
+      if (bulbGlow) {
+        bulbGlow.classList.remove('lit');
       }
-      
-      visiting.delete(currentNode);
-      return false;
+      if (bulbRays) {
+        bulbRays.classList.remove('lit');
+      }
+      comp.brightness = 0;
+      updatePropertyPanel(comp);
+    }
+  });
+}
+
+// Circuit path finding
+function findCircuitPath(graph, currentNode, targetNode, visited, path) {
+  visited.add(currentNode);
+  path.push(currentNode);
+  
+  for (const neighbor of (graph[currentNode] || [])) {
+    if (neighbor === targetNode && path.length >= 2) {
+      return true;
     }
     
-    function buildCircuitGraph() {
-      const graph = {};
-      
-      components.forEach(comp => {
-        graph[comp.id] = [];
-      });
-      
-      wires.forEach(wire => {
-        const fromId = wire.from.comp.id;
-        const toId = wire.to.comp.id;
-        
-        if (wire.from.comp.type === 'switch' && !wire.from.comp.isClosed) {
-          return;
-        }
-        if (wire.to.comp.type === 'switch' && !wire.to.comp.isClosed) {
-          return;
-        }
-        
-        graph[fromId].push(toId);
-        graph[toId].push(fromId);
-      });
-      
-      return graph;
-    }
-    
-    function addElectronsToWire(wire) {
-      const from = getTerminalAbsPos(wire.from.comp, wire.from.idx);
-      const to = getTerminalAbsPos(wire.to.comp, wire.to.idx);
-      const dx = to.x - from.x;
-      const dy = to.y - from.y;
-      const distance = Math.sqrt(dx*dx + dy*dy);
-      const electronCount = Math.max(3, Math.floor(distance / 25));
-      
-      for (let i = 0; i < electronCount; i++) {
-        addElectron(wire, i / electronCount);
+    if (!visited.has(neighbor)) {
+      if (findCircuitPath(graph, neighbor, targetNode, visited, path)) {
+        return true;
       }
     }
+  }
+  
+  path.pop();
+  return false;
+}
+
+function buildCircuitGraph() {
+  const graph = {};
+  
+  components.forEach(comp => {
+    graph[comp.id] = [];
+  });
+  
+  wires.forEach(wire => {
+    const fromId = wire.from.comp.id;
+    const toId = wire.to.comp.id;
     
-    function addElectron(wire, position) {
-      const from = getTerminalAbsPos(wire.from.comp, wire.from.idx);
-      const to = getTerminalAbsPos(wire.to.comp, wire.to.idx);
-      const electronElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      electronElement.classList.add('electron');
-      electronElement.setAttribute('r', '4');
-      const id = ++electronId;
-      const electron = {
-        id,
-        wire,
-        element: electronElement,
-        position: position,
-        speed: 0.015 + Math.random() * 0.008
-      };
-      updateElectronPosition(electron);
-      connectionsSVG.appendChild(electronElement);
-      electrons.set(id, electron);
-      return electron;
+    // Skip if either component is a switch that's open
+    if (wire.from.comp.type === 'switch' && !wire.from.comp.isClosed) {
+      return;
+    }
+    if (wire.to.comp.type === 'switch' && !wire.to.comp.isClosed) {
+      return;
     }
     
-    function updateElectronPosition(electron) {
-      const from = getTerminalAbsPos(electron.wire.from.comp, electron.wire.from.idx);
-      const to = getTerminalAbsPos(electron.wire.to.comp, electron.wire.to.idx);
-      const x = from.x + (to.x - from.x) * electron.position;
-      const y = from.y + (to.y - from.y) * electron.position;
-      electron.element.setAttribute('cx', x);
-      electron.element.setAttribute('cy', y);
+    graph[fromId].push(toId);
+    graph[toId].push(fromId);
+  });
+  
+  return graph;
+}
+
+// Electron animation
+function addElectronsToWire(wire) {
+  const from = getTerminalAbsPos(wire.from.comp, wire.from.idx);
+  const to = getTerminalAbsPos(wire.to.comp, wire.to.idx);
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.sqrt(dx*dx + dy*dy);
+  const electronCount = Math.max(3, Math.floor(distance / 25));
+  
+  // Determine direction based on battery polarity
+  let direction = 1; // default direction
+  if (wire.from.comp.type === 'battery' && wire.from.idx === 0) { // positive terminal
+    direction = -1; // electrons flow from negative to positive
+  } else if (wire.to.comp.type === 'battery' && wire.to.idx === 0) { // positive terminal
+    direction = 1;
+  }
+  
+  for (let i = 0; i < electronCount; i++) {
+    addElectron(wire, i / electronCount, direction);
+  }
+}
+
+function addElectron(wire, position, direction) {
+  const from = getTerminalAbsPos(wire.from.comp, wire.from.idx);
+  const to = getTerminalAbsPos(wire.to.comp, wire.to.idx);
+  const electronElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  electronElement.classList.add('electron');
+  electronElement.setAttribute('r', '4');
+  const id = ++electronId;
+  const electron = {
+    id,
+    wire,
+    element: electronElement,
+    position: position,
+    speed: (0.015 + Math.random() * 0.008) * direction,
+    direction
+  };
+  updateElectronPosition(electron);
+  connectionsSVG.appendChild(electronElement);
+  electrons.set(id, electron);
+  return electron;
+}
+
+function updateElectronPosition(electron) {
+  const from = getTerminalAbsPos(electron.wire.from.comp, electron.wire.from.idx);
+  const to = getTerminalAbsPos(electron.wire.to.comp, electron.wire.to.idx);
+  
+  // Adjust position based on direction
+  let effectivePosition = electron.position;
+  if (electron.direction < 0) {
+    effectivePosition = 1 - electron.position;
+  }
+  
+  const x = from.x + (to.x - from.x) * effectivePosition;
+  const y = from.y + (to.y - from.y) * effectivePosition;
+  electron.element.setAttribute('cx', x);
+  electron.element.setAttribute('cy', y);
+}
+
+function animateElectrons() {
+  electrons.forEach(electron => {
+    electron.position += electron.speed;
+    if (electron.position > 1) {
+      electron.position = 0;
+    } else if (electron.position < 0) {
+      electron.position = 1;
     }
-    
-    function animateElectrons() {
-      electrons.forEach(electron => {
-        electron.position += electron.speed;
-        if (electron.position > 1) {
-          electron.position = 0;
-        }
-        updateElectronPosition(electron);
-      });
-      requestAnimationFrame(animateElectrons);
-    }
+    updateElectronPosition(electron);
+  });
+  requestAnimationFrame(animateElectrons);
+}
 
-    document.addEventListener('mousemove', e => {
-      if (!dragging) return;
-      const canvasRect = canvas.getBoundingClientRect();
-      let newX = e.clientX - canvasRect.left - dragOffset.x;
-      let newY = e.clientY - canvasRect.top - dragOffset.y;
-      newX = Math.max(0, Math.min(canvasRect.width - 80, newX));
-      newY = Math.max(0, Math.min(canvasRect.height - 80, newY));
-      dragging.x = newX;
-      dragging.y = newY;
-      dragging.element.style.left = newX + 'px';
-      dragging.element.style.top = newY + 'px';
-      updateWirePositions();
-    });
+// Event listeners
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const canvasRect = canvas.getBoundingClientRect();
+  let newX = e.clientX - canvasRect.left - dragOffset.x;
+  let newY = e.clientY - canvasRect.top - dragOffset.y;
+  newX = Math.max(0, Math.min(canvasRect.width - 80, newX));
+  newY = Math.max(0, Math.min(canvasRect.height - 80, newY));
+  dragging.x = newX;
+  dragging.y = newY;
+  dragging.element.style.left = newX + 'px';
+  dragging.element.style.top = newY + 'px';
+  updateWirePositions();
+});
 
-    document.addEventListener('mouseup', e => {
-      if (dragging) {
-        dragging = null;
-        setStatus('Ready');
-      }
-    });
+document.addEventListener('mouseup', e => {
+  if (dragging) {
+    dragging = null;
+    setStatus('Ready');
+  }
+});
 
-    canvas.addEventListener('click', () => {
-      document.querySelectorAll('.component').forEach(el => {
-        el.classList.remove('selected');
-      });
-    });
+canvas.addEventListener('click', () => {
+  document.querySelectorAll('.component').forEach(el => {
+    el.classList.remove('selected');
+  });
+  updatePropertyPanel(null);
+});
 
-    // Start the animation
-    animateElectrons();
+// Start the animation
+animateElectrons();
   </script>
 </body>
 </html>
